@@ -93,7 +93,7 @@ prop_DeleteValid k t = validT (delete k t)
 
 prop_UnionValid t t0 = validT (t `union` t0)
 
-prop_ArbitraryValid = validT
+prop_ArbitraryValid = validT -- very important, as if we generate invalid trees all other tests are worthless
 
 -- test shrink validity
 prop_ShrinkValid_bad t = all validT (shrink t)
@@ -210,6 +210,33 @@ prop_FindModel k t = find k t === L.lookup k (toList t)
 deleteKey :: Key -> [(Key, Val)] -> [(Key, Val)]
 deleteKey k = filter ((/= k) . fst)
 
+prop_MeasureG :: (Eq v, Ord a) => a -> BST a v -> Property
+prop_MeasureG k t =
+  label (if k `elem` keys t then "present" else "absent") $
+    label l True
+  where
+    l
+      | t == nil = "empty"
+      | keys t == [k] = "just k"
+      | all (>= k) (keys t) = "at start"
+      | all (<= k) (keys t) = "at end"
+      | otherwise = "middle"
+
+prop_Measure :: Key -> Tree -> Property
+prop_Measure = prop_MeasureG
+
+-- shorter key -> tighter distribution
+newtype ShortKey = ShortKey Int deriving (Eq, Ord, Show)
+
+instance Arbitrary ShortKey where
+  arbitrary = do
+    NonNegative n <- scale (`div` 2) arbitrary
+    return $ ShortKey n
+  shrink (ShortKey k) = ShortKey <$> shrink k
+
+prop_MeasureShort :: ShortKey -> BST ShortKey Int -> Property
+prop_MeasureShort = prop_MeasureG
+
 main :: IO ()
 main = do
   quickCheck prop_ArbitraryValid
@@ -218,7 +245,7 @@ main = do
   quickCheck prop_DeleteValid
   quickCheck prop_UnionValid
   -- test shrinker (default one failed!)
-  quickCheck prop_ShrinkValid -- commented out because they're slow. uncomment to perform a full test
+  -- quickCheck prop_ShrinkValid -- commented out because they're slow. uncomment to perform a full test
   -- postconditions
   quickCheck prop_InsertPost
   quickCheck prop_DeletePost
@@ -236,7 +263,7 @@ main = do
   quickCheck prop_UnionPreservesEquiv
   quickCheck prop_FindPreservesEquiv
   -- test equivalent shrinker
-  quickCheck prop_ShrinkEquivs -- commented out because they're slow. uncomment to perform a full test
+  -- quickCheck prop_ShrinkEquivs -- commented out because they're slow. uncomment to perform a full test
   quickCheck prop_Equivs
   quickCheck prop_UnionNil1
   quickCheck prop_UnionInsert
@@ -249,3 +276,27 @@ main = do
   quickCheck prop_DeleteModel
   quickCheck prop_UnionModel
   quickCheck prop_FindModel
+  quickCheck prop_Measure -- stats will show in ghci
+  quickCheck prop_MeasureShort -- stats will show in ghci
+
+-- ghci> quickCheck prop_Measure
+-- +++ OK, passed 100 tests:
+-- 81% absent
+-- 19% present
+
+-- 72% middle
+-- 14% at end
+-- 11% at start
+--  2% empty
+--  1% just k
+-- ghci> quickCheck prop_MeasureShort
+-- +++ OK, passed 100 tests:
+-- 65% present
+-- 35% absent
+
+-- 71% middle
+-- 18% at start
+--  7% at end
+--  2% empty
+--  2% just k
+-- ghci>
