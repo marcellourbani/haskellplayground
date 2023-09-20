@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "standalone"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+			"**/Thumbs.db": true,
+			"standalone": true
+		},
+		"haskell.manageHLS": "GHCup",
+		"haskell.toolchain": {
+			"ghc": "9.2.7",
+			"hls": "1.10.0.0",
+			"cabal": null,
+			"stack": "2.9.3"
+		}
+	}
+}
