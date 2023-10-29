@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "standalone"
+		},
+		{
+			"path": "nixtest"
 		}
 	],
 	"settings": {
@@ -15,7 +18,8 @@
 			"**/CVS": true,
 			"**/.DS_Store": true,
 			"**/Thumbs.db": true,
-			"standalone": true
+			"standalone": true,
+			"nixtest": true
 		},
 		"haskell.manageHLS": "GHCup",
 		"haskell.toolchain": {
